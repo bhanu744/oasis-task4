@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Secure Auth System</title>
+  <style>
+    body {
+     font-family: "Segoe UI", sans-serif;
+     display: flex;
+     justify-content: center;
+     align-items: center;
+     height: 100vh;
+     background: url("https://static.vecteezy.com/system/resources/previews/008/176/789/original/education-is-the-way-to-success-3d-render-illustration-free-photo.jpg");
+     background-size: cover;
+    }
+
+    .container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      width: 350px;
+      display: none;
+      transition: all 0.3s ease;
+      
+    }
+
+    .active {
+      display: block;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    .show-pass {
+      margin-top: -8px;
+      font-size: 12px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    p.message {
+      font-size: 14px;
+      text-align: center;
+      margin-top: 10px;
+      color: red;
+    }
+
+    p.success {
+      color: green;
+    }
+
+    .link {
+      font-size: 13px;
+      text-align: center;
+      color: #007bff;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+<div id="registerSection" class="container active">
+  <h2>Create Account</h2>
+  <input type="email" id="regEmail" placeholder="Email" />
+  <input type="password" id="regPassword" placeholder="Password" />
+  <label><input type="checkbox" onclick="togglePassword('regPassword')"> Show Password</label>
+  <button onclick="register()">Register</button>
+  <p id="regMsg" class="message"></p>
+  <p class="link" onclick="switchSection('loginSection')">Already have an account? Login</p>
+</div>
+
+<div id="loginSection" class="container">
+  <h2>Login</h2>
+  <input type="email" id="loginEmail" placeholder="Email" />
+  <input type="password" id="loginPassword" placeholder="Password" />
+  <label><input type="checkbox" onclick="togglePassword('loginPassword')"> Show Password</label>
+  <button onclick="login()">Login</button>
+  <p id="loginMsg" class="message"></p>
+  <p class="link" onclick="switchSection('registerSection')">Don't have an account? Register</p>
+</div>
+
+<div id="dashboardSection" class="container">
+  <h2>Welcome, <span id="userDisplay"></span>!</h2>
+  <p>You are now logged in.</p>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<script>
+  function switchSection(id) {
+    document.querySelectorAll('.container').forEach(div => div.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.getElementById('regMsg').textContent = '';
+    document.getElementById('loginMsg').textContent = '';
+  }
+
+  function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    field.type = field.type === "password" ? "text" : "password";
+  }
+
+  function register() {
+    const email = document.getElementById("regEmail").value.trim().toLowerCase();
+    const password = document.getElementById("regPassword").value;
+
+    const msg = document.getElementById("regMsg");
+
+    if (!email || !password) {
+      msg.textContent = "Please fill out both fields.";
+      return;
+    }
+
+    if (password.length < 6 || !/[0-9]/.test(password) || !/[A-Za-z]/.test(password)) {
+      msg.textContent = "Password must be 6+ chars with letters and numbers.";
+      return;
+    }
+
+    if (localStorage.getItem(email)) {
+      msg.textContent = "User already exists.";
+      return;
+    }
+
+    const hashed = btoa(password); 
+    localStorage.setItem(email, hashed);
+    msg.textContent = "Registered successfully!";
+    msg.classList.remove("message");
+    msg.classList.add("success");
+
+    setTimeout(() => switchSection('loginSection'), 1000);
+  }
+
+  function login() {
+    const email = document.getElementById("loginEmail").value.trim().toLowerCase();
+    const password = document.getElementById("loginPassword").value;
+    const msg = document.getElementById("loginMsg");
+
+    const storedHash = localStorage.getItem(email);
+    if (!storedHash) {
+      msg.textContent = "No account found.";
+      return;
+    }
+
+    if (storedHash !== btoa(password)) {
+      msg.textContent = "Incorrect password.";
+      return;
+    }
+
+    localStorage.setItem("loggedInUser", email);
+    showDashboard();
+  }
+
+  function logout() {
+    localStorage.removeItem("loggedInUser");
+    switchSection("loginSection");
+  }
+
+  function showDashboard() {
+    const email = localStorage.getItem("loggedInUser");
+    if (!email) return switchSection("loginSection");
+
+    document.getElementById("userDisplay").textContent = email;
+    switchSection("dashboardSection");
+  }
+  window.onload = () => {
+    if (localStorage.getItem("loggedInUser")) {
+      showDashboard();
+    }
+  };
+</script>
+
+</body>
+</html>
